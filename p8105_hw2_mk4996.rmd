@@ -60,3 +60,11 @@ unemp_df = read_csv(file = "./unemployment.csv",
   head(unemp_df)
 
 ```
+
+## Join the datasets
+```{r}
+pols_snp  = left_join(pols_df, snp_df,  by = c("year","month"))
+final_df  = left_join(pols_snp, unemp_df, by = c("year","month")) |>
+  arrange(year, month)
+
+```

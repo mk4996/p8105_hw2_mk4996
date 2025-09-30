@@ -30,3 +30,17 @@ pols_df = read_csv(file = "./pols-month.csv",
   head(pols_df)
 ```
 
+## Second: Cleaning the data in snp.csv.
+```{r}
+snp_df = read_csv(file = "./snp.csv",
+                         na = c(".", "NA", "")) |>
+  janitor::clean_names() |>
+  separate(date, into = c("month", "day", "year"), sep = "/", convert = TRUE) |>
+  mutate(
+  year = ifelse(year < 20, year + 2000, year + 1900),  
+  month = factor(month.name[month], levels = month.name, ordered = TRUE)) |>
+  select(year, month, close) |>
+  arrange(year, month)
+
+  head(snp_df)
+```

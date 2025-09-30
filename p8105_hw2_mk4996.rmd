@@ -7,6 +7,7 @@ output: github_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999) 
 ```
 # Problem 1
 
@@ -140,4 +141,7 @@ trash_data = bind_rows(mr_trash, prof_trash, gwynnda)
 ```{r, include=FALSE}
 head(trash_data)
 ```
+
+## Write a short paragraph about these datasets
+Mr. Trash Wheel is a water-wheel vessel that intercepts litter and debris in Baltimore’s Inner Harbor; the public spreadsheet records dumpster-level collections, including dates, weights/volumes, and counts of common items. Using those sheets, I combined the Mr., Professor, and Gwynnda data into a single tidy dataset with `r nrow(trash_data)` observations across `r n_distinct(trash_data$trash_wheel)` devices. Each row corresponds to one dumpster and includes fields such as `dumpster`, `date`, `year`, `month`, `weight_tons`, `volume_cubic_yards`, and item counts (e.g., `plastic_bottles`, `polystyrene`, `cigarette_butts`, `glass_bottles`, `plastic_bags`, `wrappers`; `sports_balls` is recorded only on some sheets). For the available data, **Professor Trash Wheel** collected a total of `r trash_data |> filter(trash_wheel == "Professor Trash Wheel") |> summarise(total = sum(weight_tons, na.rm = TRUE)) |> pull(total) |> round(1)` tons of trash, and **Gwynnda** collected `r trash_data |> filter(trash_wheel == "Gwynnda Trash Wheel", year == 2022, str_detect(tolower(month), "^jun")) |> summarise(total = sum(cigarette_butts, na.rm = TRUE)) |> pull(total)` cigarette butts in June 2022.
 

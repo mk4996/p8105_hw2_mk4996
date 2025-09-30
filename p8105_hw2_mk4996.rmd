@@ -27,8 +27,10 @@ pols_df = read_csv(file = "./pols-month.csv",
       TRUE ~ NA_character_
     )) |>
   select(-day, -prez_dem, -prez_gop)
+```
 
-  head(pols_df)
+```{r, include=FALSE}
+head(pols_df)
 ```
 
 ## Second: Cleaning the data in snp.csv.
@@ -43,7 +45,9 @@ snp_df = read_csv(file = "./snp.csv",
   month = factor(month.name[month], levels = month.name, ordered = TRUE)) |>
   select(year, month, close) |>
   arrange(year, month)
+```
 
+```{r, include=FALSE}
   head(snp_df)
 ```
 
@@ -59,9 +63,10 @@ unemp_df = read_csv(file = "./unemployment.csv",
     month = factor(month.name[month], levels = month.name, ordered = TRUE)
   ) |>
   arrange(year, month)
+```
 
+```{r, include=FALSE}
   head(unemp_df)
-
 ```
 
 ## Join the datasets
@@ -69,7 +74,9 @@ unemp_df = read_csv(file = "./unemployment.csv",
 pols_snp  = left_join(pols_df, snp_df,  by = c("year","month"))
 final_df  = left_join(pols_snp, unemp_df, by = c("year","month")) |>
   arrange(year, month)
+```
 
+```{r, include=FALSE}
   head(final_df)
 ```
 
@@ -90,24 +97,47 @@ mr_trash =
   read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N655") |> 
   janitor::clean_names() |> 
   drop_na(dumpster) |> 
-  mutate(sports_balls = as.integer(round(sports_balls))) |> 
-  mutate(trash_wheel = "Mr. Trash Wheel")
+  mutate(year = readr::parse_integer(as.character(year)),
+        (sports_balls = as.integer(round(sports_balls))),
+        (trash_wheel = "Mr. Trash Wheel")) 
+```
+
+```{r, include=FALSE}
+head(mr_trash)
 ```
 
 ## Cleaning the data in Professor Trash Wheel
 ```{r}
 prof_trash = 
-  read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Professor Trash Wheel", range = "A2:M117") |> 
+  read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Professor Trash Wheel", range = "A2:M123") |> 
   janitor::clean_names() |> 
   drop_na(dumpster) |> 
   mutate(trash_wheel = "Professor Trash Wheel")
 ```
 
+```{r, include=FALSE}
+head(prof_trash)
+```
+
 ## Cleaning the data in Gwynnda Trash Wheel
 ```{r}
 gwynnda = 
-  read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Gwynnda Trash Wheel", range = "A2:L160") |> 
+  read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Gwynnda Trash Wheel", range = "A2:L266") |> 
   janitor::clean_names() |> 
   drop_na(dumpster) |> 
   mutate(trash_wheel = "Gwynnda Trash Wheel")
 ```
+
+```{r, include=FALSE}
+head(gwynnda)
+```
+
+## Combine
+```{r}
+trash_data = bind_rows(mr_trash, prof_trash, gwynnda)
+```
+
+```{r, include=FALSE}
+head(trash_data)
+```
+

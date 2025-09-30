@@ -93,3 +93,13 @@ mr_trash =
   mutate(sports_balls = as.integer(round(sports_balls))) |> 
   mutate(trash_wheel = "Mr. Trash Wheel")
 ```
+
+## Cleaning the data in Professor Trash Wheel
+```{r}
+prof_trash = 
+  read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Professor Trash Wheel", range = "A2:M117") |> 
+  janitor::clean_names() |> 
+  drop_na(dumpster) |> 
+  mutate(trash_wheel = "Professor Trash Wheel")
+```
+

@@ -132,7 +132,7 @@ gwynnda =
 head(gwynnda)
 ```
 
-## Combine
+## Combine the datasets
 ```{r}
 trash_data = bind_rows(mr_trash, prof_trash, gwynnda)
 ```

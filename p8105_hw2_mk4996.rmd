@@ -74,6 +74,7 @@ final_df  = left_join(pols_snp, unemp_df, by = c("year","month")) |>
 ```
 
 ## Write a short paragraph about these datasets
+
 The `pols-month` dataset contained the number of national politicians who are democratic or republican at any given time.
 The `snp` dataset contained Standard & Poor’s stock market index (S&P), often used as a representative measure of stock market as a whole. 
 The `unemployment` dataset reports monthly unemployment percentages.  
@@ -81,6 +82,14 @@ The `unemployment` dataset reports monthly unemployment percentages.
 After merging, the resulting dataset has `r nrow(final_df)` rows and `r ncol(final_df)` columns, ranging years `r min(final_df$year)` to `r max(final_df$year)`.  
 Key variables include `year`, `month`, `president`, `close` (the closing values of the S&P stock index), and `unemployment`.
 
-
-
-
+# Problem2
+## Cleaning the data in Mr. Trash Wheel
+```{r}
+library(readxl)
+mr_trash = 
+  read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N655") |> 
+  janitor::clean_names() |> 
+  drop_na(dumpster) |> 
+  mutate(sports_balls = as.integer(round(sports_balls))) |> 
+  mutate(trash_wheel = "Mr. Trash Wheel")
+```

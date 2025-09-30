@@ -44,3 +44,19 @@ snp_df = read_csv(file = "./snp.csv",
 
   head(snp_df)
 ```
+
+## Third: Tidying the unemployment data
+```{r}
+unemp_df = read_csv(file = "./unemployment.csv",
+                         na = c(".", "NA", "")) |>
+  janitor::clean_names() |>
+  pivot_longer(-year, names_to = "month", values_to = "unemployment") |>
+  mutate(
+    month = match(tolower(month), tolower(month.abb)),
+    month = factor(month.name[month], levels = month.name, ordered = TRUE)
+  ) |>
+  arrange(year, month)
+
+  head(unemp_df)
+
+```

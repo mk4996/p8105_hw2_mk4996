@@ -206,3 +206,15 @@ full = zori_long |>
 glimpse(full)
 ```
 
+## Describe the resulting tidy dataset
+```{r p3-summary, message=FALSE, warning=FALSE}
+n_obs   <- nrow(full)
+n_zip   <- dplyr::n_distinct(full$zip)
+n_neigh <- dplyr::n_distinct(full$neighborhood, na.rm = TRUE)
+d_min   <- min(full$date, na.rm = TRUE)
+d_max   <- max(full$date, na.rm = TRUE)
+
+```
+The tidy Zillow dataset contains `r n_obs` observations across `r n_zip` ZIP codes and `r n_neigh` neighborhoods, with monthly ZORI values from `r format(d_min, "%b %Y")` to `r format(d_max, "%b %Y")`. Key variables are `zip`, `borough`, `neighborhood`, `date`, and `zori`.
+
+

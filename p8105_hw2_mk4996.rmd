@@ -95,7 +95,7 @@ Key variables include `year`, `month`, `president`, `close` (the closing values 
 ```{r}
 library(readxl)
 mr_trash = 
-  read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N655") |> 
+  read_excel("./202509 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N710") |> 
   clean_names() |> 
   drop_na(dumpster) |> 
   mutate(year = parse_integer(as.character(year)),
@@ -110,7 +110,7 @@ head(mr_trash)
 ## Cleaning the data in Professor Trash Wheel
 ```{r}
 prof_trash = 
-  read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Professor Trash Wheel", range = "A2:M123") |> 
+  read_excel("./202509 Trash Wheel Collection Data.xlsx", sheet = "Professor Trash Wheel", range = "A2:M135") |> 
   clean_names() |> 
   drop_na(dumpster) |> 
   mutate(trash_wheel = "Professor Trash Wheel")
@@ -120,13 +120,13 @@ prof_trash =
 head(prof_trash)
 ```
 
-## Cleaning the data in Gwynnda Trash Wheel
+## Cleaning the data in Gwynns Falls Trash Wheel
 ```{r}
 gwynnda = 
-  read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Gwynnda Trash Wheel", range = "A2:L266") |> 
+  read_excel("./202509 Trash Wheel Collection Data.xlsx", sheet = "Gwynns Falls Trash Wheel", range = "A2:L352") |> 
   clean_names() |> 
   drop_na(dumpster) |> 
-  mutate(trash_wheel = "Gwynnda Trash Wheel")
+  mutate(trash_wheel = "Gwynns Falls Trash Wheel")
 ```
 
 ```{r, include=FALSE}
@@ -169,6 +169,9 @@ select(zip, neighborhood, borough) |>
     borough      = stringr::str_c(sort(unique(na.omit(borough))), collapse = " / "),
     neighborhood = stringr::str_c(sort(unique(na.omit(neighborhood))), collapse = ", "),
     .groups = "drop"
+  ) |>
+ mutate(
+    neighborhood = dplyr::na_if(neighborhood, "") 
   )
 ```
 
@@ -217,4 +220,62 @@ d_max   <- max(full$date, na.rm = TRUE)
 ```
 The tidy Zillow dataset contains `r n_obs` observations across `r n_zip` ZIP codes and `r n_neigh` neighborhoods, with monthly ZORI values from `r format(d_min, "%b %Y")` to `r format(d_max, "%b %Y")`. Key variables are `zip`, `borough`, `neighborhood`, `date`, and `zori`.
 
+## ZIP codes appear in the ZIP code dataset but not in the Zillow dataset
+```{r p3-absent, message=FALSE, warning=FALSE}
+
+zips_in_zori <- zori_wide |> dplyr::distinct(zip)
+
+absent_zips <- zip_codes |>
+  dplyr::anti_join(zips_in_zori, by = "zip") |>
+  dplyr::arrange(borough, zip)
+
+absent_n <- nrow(absent_zips)
+
+knitr::kable(
+  absent_zips |> dplyr::slice_head(n = 10),
+  caption = "ZIPs present in ZIP dictionary but absent from Zillow ZORI (first 10)"
+)
+```
+
+There are `r absent_n` ZIP codes in the ZIP dictionary that do not appear in the ZORI dataset. Likely reasons include PO-box–oriented ZIPs, areas with very limited rental markets, boundary/coding differences across sources, or retired/new ZIPs not covered in this release.
+
+
+##  10 ZIP codes (along with the borough and neighborhood) with largest drop in price from January 2020
+```{r p3-drops, message=FALSE, warning=FALSE}
+
+d2020 <- as.Date("2020-01-31"); if (!any(full$date == d2020)) d2020 <- as.Date("2020-01-01")
+d2021 <- as.Date("2021-01-31"); if (!any(full$date == d2021)) d2021 <- as.Date("2021-01-01")
+
+drops <-
+  full |>
+  dplyr::filter(date %in% c(d2020, d2021)) |>
+  dplyr::select(zip, borough, neighborhood, date, zori) |>
+  tidyr::pivot_wider(
+    names_from  = date,
+    values_from = zori,
+    names_glue  = "zori_{format(date, '%Y_%m')}"
+  ) |>
+  dplyr::filter(!is.na(zori_2020_01), !is.na(zori_2021_01)) |>
+  dplyr::mutate(
+    change     = zori_2021_01 - zori_2020_01,
+    pct_change = change / zori_2020_01
+  ) |>
+  dplyr::arrange(change) |>
+  dplyr::slice_head(n = 10)
+
+knitr::kable(
+  drops |>
+    dplyr::transmute(
+      ZIP = zip,
+      Borough = borough,
+      Neighborhood = neighborhood,
+      `Jan 2020` = round(zori_2020_01, 0),
+      `Jan 2021` = round(zori_2021_01, 0),
+      Change = round(change, 0),
+      `Pct change` = scales::percent(pct_change, accuracy = 0.1)
+    ),
+  caption = "Largest drops in ZORI: Jan 2020 → Jan 2021 (Top 10)"
+)
+```
+The largest declines are concentrated in high-rent neighborhoods, consistent with the temporary softening of urban rental demand during 2020–2021.
 

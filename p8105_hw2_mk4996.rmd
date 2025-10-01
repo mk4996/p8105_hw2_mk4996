@@ -277,5 +277,10 @@ knitr::kable(
   caption = "Largest drops in ZORI: Jan 2020 → Jan 2021 (Top 10)"
 )
 ```
+
+**Comment.** 
 The largest declines are concentrated in high-rent neighborhoods, consistent with the temporary softening of urban rental demand during 2020–2021.
+
+All top-10 ZIP codes with the largest Jan-2020 → Jan-2021 ZORI declines are in **Manhattan** (e.g., Lower Manhattan, Lower East Side, Chelsea/Clinton, Greenwich Village/Soho). The median percent drop among these ZIPs is `r scales::percent(median(drops$pct_change), accuracy = 0.1)` (range `r paste(scales::percent(min(drops$pct_change), 0.1), "to", scales::percent(max(drops$pct_change), 0.1))`). This concentration in high-rent neighborhoods is consistent with a temporary softening of urban rental demand during 2020–2021. 
+*Note:* ZIP `r paste(drops$zip[is.na(drops$neighborhood)], collapse = ", ")` lacks a neighborhood label in the ZIP dictionary.
 

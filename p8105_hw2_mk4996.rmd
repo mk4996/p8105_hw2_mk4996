@@ -7,18 +7,18 @@ output: github_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
 options(scipen = 999) 
 ```
 # Problem 1
 
 ## First: Cleaning the data in pols-month.csv.
 ```{r}
-library(tidyverse)
-
 pols_df = read_csv(file = "./pols-month.csv", 
                           na = c(".", "NA", ""), 
                           show_col_types = FALSE) |>
-  janitor::clean_names() |>
+  clean_names() |>
   separate(mon, into = c("year", "month", "day"), sep = "-", convert = TRUE) |>
   mutate(
     month = factor(month.name[month], levels = month.name, ordered = TRUE),
@@ -39,7 +39,7 @@ head(pols_df)
 snp_df = read_csv(file = "./snp.csv",
                          na = c(".", "NA", ""),
                          show_col_types = FALSE) |>
-  janitor::clean_names() |>
+  clean_names() |>
   separate(date, into = c("month", "day", "year"), sep = "/", convert = TRUE) |>
   mutate(
   year = ifelse(year < 20, year + 2000, year + 1900),  
@@ -57,7 +57,7 @@ snp_df = read_csv(file = "./snp.csv",
 unemp_df = read_csv(file = "./unemployment.csv",
                          na = c(".", "NA", ""),
                          show_col_types = FALSE) |>
-  janitor::clean_names() |>
+  clean_names() |>
   pivot_longer(-year, names_to = "month", values_to = "unemployment") |>
   mutate(
     month = match(tolower(month), tolower(month.abb)),
@@ -96,9 +96,9 @@ Key variables include `year`, `month`, `president`, `close` (the closing values 
 library(readxl)
 mr_trash = 
   read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Mr. Trash Wheel", range = "A2:N655") |> 
-  janitor::clean_names() |> 
+  clean_names() |> 
   drop_na(dumpster) |> 
-  mutate(year = readr::parse_integer(as.character(year)),
+  mutate(year = parse_integer(as.character(year)),
         (sports_balls = as.integer(round(sports_balls))),
         (trash_wheel = "Mr. Trash Wheel")) 
 ```
@@ -111,7 +111,7 @@ head(mr_trash)
 ```{r}
 prof_trash = 
   read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Professor Trash Wheel", range = "A2:M123") |> 
-  janitor::clean_names() |> 
+  clean_names() |> 
   drop_na(dumpster) |> 
   mutate(trash_wheel = "Professor Trash Wheel")
 ```
@@ -124,7 +124,7 @@ head(prof_trash)
 ```{r}
 gwynnda = 
   read_excel("./202409 Trash Wheel Collection Data.xlsx", sheet = "Gwynnda Trash Wheel", range = "A2:L266") |> 
-  janitor::clean_names() |> 
+  clean_names() |> 
   drop_na(dumpster) |> 
   mutate(trash_wheel = "Gwynnda Trash Wheel")
 ```
@@ -145,3 +145,31 @@ head(trash_data)
 ## Write a short paragraph about these datasets
 Mr. Trash Wheel is a water-wheel vessel that intercepts litter and debris in Baltimore’s Inner Harbor; the public spreadsheet records dumpster-level collections, including dates, weights/volumes, and counts of common items. Using those sheets, I combined the Mr., Professor, and Gwynnda data into a single tidy dataset with `r nrow(trash_data)` observations across `r n_distinct(trash_data$trash_wheel)` devices. Each row corresponds to one dumpster and includes fields such as `dumpster`, `date`, `year`, `month`, `weight_tons`, `volume_cubic_yards`, and item counts (e.g., `plastic_bottles`, `polystyrene`, `cigarette_butts`, `glass_bottles`, `plastic_bags`, `wrappers`; `sports_balls` is recorded only on some sheets). For the available data, **Professor Trash Wheel** collected a total of `r trash_data |> filter(trash_wheel == "Professor Trash Wheel") |> summarise(total = sum(weight_tons, na.rm = TRUE)) |> pull(total) |> round(1)` tons of trash, and **Gwynnda** collected `r trash_data |> filter(trash_wheel == "Gwynnda Trash Wheel", year == 2022, str_detect(tolower(month), "^jun")) |> summarise(total = sum(cigarette_butts, na.rm = TRUE)) |> pull(total)` cigarette butts in June 2022.
 
+
+# Problem 3
+## Cleaning the data in Zip Codes
+```{r}
+library(janitor)
+zip_codes = read_csv("./Zip Codes.csv", na = c(".", "NA",
+""), show_col_types = FALSE) |>
+  clean_names() |>
+  mutate(
+    zip = as.character(zip_code),  
+  ) |>
+  distinct()
+
+county_to_borough = c(
+  "New York" = "Manhattan",
+  "Kings"    = "Brooklyn",
+  "Queens"   = "Queens",
+  "Bronx"    = "Bronx",
+  "Richmond" = "Staten Island"
+)
+zip_codes = zip_codes |>
+  mutate(borough = recode(county, !!!county_to_borough)) |>
+  select(zip, neighborhood, borough) 
+```
+
+```{r, include=FALSE}
+  head(zip_codes)
+```

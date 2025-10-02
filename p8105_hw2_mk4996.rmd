@@ -241,7 +241,7 @@ There are `r absent_n` ZIP codes in the ZIP dictionary that do not appear in the
 d2020 = as.Date("2020-01-31"); if (!any(full$date == d2020)) d2020 = as.Date("2020-01-01")
 d2021 = as.Date("2021-01-31"); if (!any(full$date == d2021)) d2021 = as.Date("2021-01-01")
 
-drops <-
+drops =
   full |>
   filter(date %in% c(d2020, d2021)) |>
   select(zip, borough, neighborhood, date, zori) |>

@@ -23,7 +23,7 @@ pols_df = read_csv(file = "./pols-month.csv",
   mutate(
     month = factor(month.name[month], levels = month.name, ordered = TRUE),
     president = case_when(
-      prez_gop == 1 ~ "gop",
+      prez_gop %in% c(1, 2) ~ "gop",
       prez_dem == 1 ~ "dem",
       TRUE ~ NA_character_
     )) |>
@@ -143,15 +143,14 @@ head(trash_data)
 ```
 
 ## Write a short paragraph about these datasets
-Mr. Trash Wheel is a water-wheel vessel that intercepts litter and debris in Baltimore’s Inner Harbor; the public spreadsheet records dumpster-level collections, including dates, weights/volumes, and counts of common items. Using those sheets, I combined the Mr., Professor, and Gwynnda data into a single tidy dataset with `r nrow(trash_data)` observations across `r n_distinct(trash_data$trash_wheel)` devices. Each row corresponds to one dumpster and includes fields such as `dumpster`, `date`, `year`, `month`, `weight_tons`, `volume_cubic_yards`, and item counts (e.g., `plastic_bottles`, `polystyrene`, `cigarette_butts`, `glass_bottles`, `plastic_bags`, `wrappers`; `sports_balls` is recorded only on some sheets). For the available data, **Professor Trash Wheel** collected a total of `r trash_data |> filter(trash_wheel == "Professor Trash Wheel") |> summarise(total = sum(weight_tons, na.rm = TRUE)) |> pull(total) |> round(1)` tons of trash, and **Gwynnda** collected `r trash_data |> filter(trash_wheel == "Gwynnda Trash Wheel", year == 2022, str_detect(tolower(month), "^jun")) |> summarise(total = sum(cigarette_butts, na.rm = TRUE)) |> pull(total)` cigarette butts in June 2022.
+Mr. Trash Wheel is a water-wheel vessel that intercepts litter and debris in Baltimore’s Inner Harbor; the public spreadsheet records dumpster-level collections, including dates, weights/volumes, and counts of common items. Using those sheets, I combined the Mr., Professor, and Gwynnda data into a single tidy dataset with `r nrow(trash_data)` observations across `r n_distinct(trash_data$trash_wheel)` devices. Each row corresponds to one dumpster and includes fields such as `dumpster`, `date`, `year`, `month`, `weight_tons`, `volume_cubic_yards`, and item counts (e.g., `plastic_bottles`, `polystyrene`, `cigarette_butts`, `glass_bottles`, `plastic_bags`, `wrappers`; `sports_balls` is recorded only on some sheets). For the available data, **Professor Trash Wheel** collected a total of `r trash_data |> filter(trash_wheel == "Professor Trash Wheel") |> summarise(total = sum(weight_tons, na.rm = TRUE)) |> pull(total) |> round(1)` tons of trash, and **Gwynnda** collected `r trash_data |> filter(trash_wheel == "Gwynns Falls Trash Wheel", year == 2022, str_detect(tolower(month), "june")) |> summarise(total = sum(cigarette_butts, na.rm = TRUE)) |> pull(total)` cigarette butts in June 2022.
 
 
 # Problem 3
 ## Cleaning the data in Zip Codes
 ```{r}
 library(janitor)
-zip_codes = read_csv("./Zip Codes.csv", na = c(".", "NA",
-""), show_col_types = FALSE) |>
+zip_codes = read_csv("./Zip Codes.csv", na = c(".", "NA", ""), show_col_types = FALSE) |>
   clean_names() |>
   mutate(
     zip = as.character(zip_code),  
@@ -166,17 +165,13 @@ zip_codes = read_csv("./Zip Codes.csv", na = c(".", "NA",
 select(zip, neighborhood, borough) |>
   group_by(zip) |>
   summarise(
-    borough      = stringr::str_c(sort(unique(na.omit(borough))), collapse = " / "),
-    neighborhood = stringr::str_c(sort(unique(na.omit(neighborhood))), collapse = ", "),
+    borough      = str_c(sort(unique(na.omit(borough))), collapse = " / "),
+    neighborhood = str_c(sort(unique(na.omit(neighborhood))), collapse = ", "),
     .groups = "drop"
   ) |>
  mutate(
-    neighborhood = dplyr::na_if(neighborhood, "") 
+    neighborhood = na_if(neighborhood, "") 
   )
-```
-
-```{r, include=FALSE}
-  head(zip_codes)
 ```
 
 ## Cleaning the data in Zip zori
@@ -211,11 +206,11 @@ glimpse(full)
 
 ## Describe the resulting tidy dataset
 ```{r p3-summary, message=FALSE, warning=FALSE}
-n_obs   <- nrow(full)
-n_zip   <- dplyr::n_distinct(full$zip)
-n_neigh <- dplyr::n_distinct(full$neighborhood, na.rm = TRUE)
-d_min   <- min(full$date, na.rm = TRUE)
-d_max   <- max(full$date, na.rm = TRUE)
+n_obs   = nrow(full)
+n_zip   = n_distinct(full$zip)
+n_neigh = n_distinct(full$neighborhood, na.rm = TRUE)
+d_min   = min(full$date, na.rm = TRUE)
+d_max   = max(full$date, na.rm = TRUE)
 
 ```
 The tidy Zillow dataset contains `r n_obs` observations across `r n_zip` ZIP codes and `r n_neigh` neighborhoods, with monthly ZORI values from `r format(d_min, "%b %Y")` to `r format(d_max, "%b %Y")`. Key variables are `zip`, `borough`, `neighborhood`, `date`, and `zori`.
@@ -223,16 +218,16 @@ The tidy Zillow dataset contains `r n_obs` observations across `r n_zip` ZIP cod
 ## ZIP codes appear in the ZIP code dataset but not in the Zillow dataset
 ```{r p3-absent, message=FALSE, warning=FALSE}
 
-zips_in_zori <- zori_wide |> dplyr::distinct(zip)
+zips_in_zori = zori_wide |> distinct(zip)
 
-absent_zips <- zip_codes |>
-  dplyr::anti_join(zips_in_zori, by = "zip") |>
-  dplyr::arrange(borough, zip)
+absent_zips = zip_codes |>
+  anti_join(zips_in_zori, by = "zip") |>
+  arrange(borough, zip)
 
-absent_n <- nrow(absent_zips)
+absent_n = nrow(absent_zips)
 
 knitr::kable(
-  absent_zips |> dplyr::slice_head(n = 10),
+  absent_zips |> slice_head(n = 10),
   caption = "ZIPs present in ZIP dictionary but absent from Zillow ZORI (first 10)"
 )
 ```
@@ -243,29 +238,29 @@ There are `r absent_n` ZIP codes in the ZIP dictionary that do not appear in the
 ##  10 ZIP codes (along with the borough and neighborhood) with largest drop in price from January 2020
 ```{r p3-drops, message=FALSE, warning=FALSE}
 
-d2020 <- as.Date("2020-01-31"); if (!any(full$date == d2020)) d2020 <- as.Date("2020-01-01")
-d2021 <- as.Date("2021-01-31"); if (!any(full$date == d2021)) d2021 <- as.Date("2021-01-01")
+d2020 = as.Date("2020-01-31"); if (!any(full$date == d2020)) d2020 = as.Date("2020-01-01")
+d2021 = as.Date("2021-01-31"); if (!any(full$date == d2021)) d2021 = as.Date("2021-01-01")
 
 drops <-
   full |>
-  dplyr::filter(date %in% c(d2020, d2021)) |>
-  dplyr::select(zip, borough, neighborhood, date, zori) |>
-  tidyr::pivot_wider(
+  filter(date %in% c(d2020, d2021)) |>
+  select(zip, borough, neighborhood, date, zori) |>
+  pivot_wider(
     names_from  = date,
     values_from = zori,
     names_glue  = "zori_{format(date, '%Y_%m')}"
   ) |>
-  dplyr::filter(!is.na(zori_2020_01), !is.na(zori_2021_01)) |>
-  dplyr::mutate(
+  filter(!is.na(zori_2020_01), !is.na(zori_2021_01)) |>
+  mutate(
     change     = zori_2021_01 - zori_2020_01,
     pct_change = change / zori_2020_01
   ) |>
-  dplyr::arrange(change) |>
-  dplyr::slice_head(n = 10)
+  arrange(change) |>
+  slice_head(n = 10)
 
 knitr::kable(
   drops |>
-    dplyr::transmute(
+    transmute(
       ZIP = zip,
       Borough = borough,
       Neighborhood = neighborhood,
